@@ -81,7 +81,7 @@ namespace AsixDelayedStarter
             return smProc.Length == 0 ? null : smProc[0];
         }
 
-        private void StationManagerHaveUI(Process process)
+        private bool StationManagerHaveUI(Process process)
         {
             try
             {
@@ -90,23 +90,19 @@ namespace AsixDelayedStarter
                 //check visible area first
                 var promNotifAreaAE = PromotedNotificationAreaAE(rootElement);
                 _log.Debug("Get User Promoted Notification Area automation element successfully");
-
-                //AutomationElement notifOverflowArea = AutomationElement.RootElement
-                var shellTrayAE = rootElement.FindFirst(TreeScope.Children, new PropertyCondition(AutomationElement.ClassNameProperty, "Shell_TrayWnd"));
-                if (shellTrayAE == null)
-                    throw new Exception("Cant find Shell_TrayWnd automation element (is it Windows?)");
-                var trayNotifyAE = shellTrayAE.FindFirst(TreeScope.Children, new PropertyCondition(AutomationElement.ClassNameProperty, "TrayNotifyWnd"));
-                if (trayNotifyAE == null)
-                    throw new Exception("Cant find TrayNotifyWnd automation element (is it Windows?)");
-                var notifyChevron = trayNotifyAE.FindFirst(TreeScope.Children, new PropertyCondition(AutomationElement.NameProperty, "Notification Chevron"));
-                if (trayNotifyAE == null)
-                    throw new Exception("Cant find Notification Chevron automation element (is it Windows?)");
-                InvokeAutomationElement(notifyChevron);
+                if (StationManagerButtonAE(promNotifAreaAE) != null)
+                    return true;
+                //then we go deeper to overflow notification area. First of all find notification chevron button 
+                var notifChevButtonAE = NotificationChevronButtonAE(rootElement);
+                if (notifChevButtonAE == null)
+                    return false;
+                InvokeAutomationElement(notifChevButtonAE); //click this fucking button
+                //now we have new element named "Overflow Notification Area". find it. and find a child button in it.
+                
             }
             catch(Exception ex)
             {
-                _log.Error(ex.Message);
-                System.Environment.Exit(0);
+                
             }
         }
 
@@ -134,9 +130,51 @@ namespace AsixDelayedStarter
             }
         }
 
-        private bool IsStationManagerButtonExist(AutomationElement element)
+        private AutomationElement StationManagerButtonAE(AutomationElement parentElement)
         {
-            return element.FindFirst(TreeScope.Children, new PropertyCondition(AutomationElement.NameProperty, "Station Configuration Editor")) == null ? false : true;
+            return parentElement.FindFirst(TreeScope.Children, new PropertyCondition(AutomationElement.NameProperty, "Station Configuration Editor"));
+        }
+
+        private AutomationElement NotificationChevronButtonAE(AutomationElement rootAE)
+        {
+            try
+            {
+                var shellTrayAE = rootAE.FindFirst(TreeScope.Children, new PropertyCondition(AutomationElement.ClassNameProperty, "Shell_TrayWnd"));
+                if (shellTrayAE == null)
+                    throw new Exception("Cant find Shell_TrayWnd automation element (is it Windows?)");
+                var trayNotifyAE = shellTrayAE.FindFirst(TreeScope.Children, new PropertyCondition(AutomationElement.ClassNameProperty, "TrayNotifyWnd"));
+                if (trayNotifyAE == null)
+                    throw new Exception("Cant find TrayNotifyWnd automation element (is it Windows?)");
+                var notifyChevron = trayNotifyAE.FindFirst(TreeScope.Children, new PropertyCondition(AutomationElement.NameProperty, "Notification Chevron"));
+                return notifyChevron;
+            }
+            catch(Exception ex)
+            {
+                _log.Error(ex.Message);
+                System.Environment.Exit(0);
+                return null;
+            }
+        }
+
+        private AutomationElement NotificationOverflowAreaAE(AutomationElement rootAE)
+        {
+            try
+            {
+                var overflowWindowAE = rootAE.FindFirst(TreeScope.Children, new PropertyCondition(AutomationElement.ClassNameProperty, "NotifyIconOverflowWindow"));
+                if (shellTrayAE == null)
+                    throw new Exception("Cant find Shell_TrayWnd automation element (is it Windows?)");
+                var trayNotifyAE = shellTrayAE.FindFirst(TreeScope.Children, new PropertyCondition(AutomationElement.ClassNameProperty, "TrayNotifyWnd"));
+                if (trayNotifyAE == null)
+                    throw new Exception("Cant find TrayNotifyWnd automation element (is it Windows?)");
+                var notifyChevron = trayNotifyAE.FindFirst(TreeScope.Children, new PropertyCondition(AutomationElement.NameProperty, "Notification Chevron"));
+                return notifyChevron;
+            }
+            catch (Exception ex)
+            {
+                _log.Error(ex.Message);
+                System.Environment.Exit(0);
+                return null;
+            }
         }
         private void InvokeAutomationElement(AutomationElement automationElement)
         {
