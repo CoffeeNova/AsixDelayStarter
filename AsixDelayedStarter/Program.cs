@@ -161,7 +161,7 @@ namespace AsixDelayedStarter
             try
             {
                 var overflowWindowAE = rootAE.FindFirst(TreeScope.Children, new PropertyCondition(AutomationElement.ClassNameProperty, "NotifyIconOverflowWindow"));
-                if (shellTrayAE == null)
+                if (overflowWindowAE == null)
                     throw new Exception("Cant find Shell_TrayWnd automation element (is it Windows?)");
                 var trayNotifyAE = shellTrayAE.FindFirst(TreeScope.Children, new PropertyCondition(AutomationElement.ClassNameProperty, "TrayNotifyWnd"));
                 if (trayNotifyAE == null)
